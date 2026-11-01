@@ -13,7 +13,9 @@ let png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP
 console.log('PASS: SVG 要素・XML・自動軸・表示設定・エスケープ・PNG pHYs/CRC32・CSV・出力サイズ');
 
 // Unknowns paint over standards and all labels paint over markers.
-let layered=G.buildSvg({...model,unknowns:[u,{...u,name:'B'}]},{unknownLabels:true}).svg;
+let layered=G.buildSvg({...model,unknowns:[u,{...u,name:'B'}]},{unknownLabels:true,unknownMarker:'circle'}).svg;
+// Default: no filled marker at the intersection, only the dotted guides meet there.
+let plain=G.buildSvg(model,{}).svg;assert(!plain.includes('fill="#000"/>')&&(plain.match(/stroke-dasharray=/g)||[]).length>=2);
 let guide=layered.lastIndexOf('stroke-dasharray='),standard=layered.indexOf('class="standard-point"'),marker=layered.indexOf('fill="#000"/>',standard),label=layered.indexOf('>試料A</text>');
 assert(guide<standard&&layered.lastIndexOf('class="standard-point"')<marker&&marker<label);
 for(let marker of ['circle','square','triangle','cross','diamond']){let svg=G.buildSvg(model,{unknownMarker:marker,width:777.777,height:499.999,radius:6.1234}).svg;for(let match of svg.matchAll(/\b(?:x|y|x1|y1|x2|y2|cx|cy|r|width|height|font-size|stroke-width|dy|viewBox|transform|d|stroke-dasharray)="([^"]*)"/g))assert(!/\d+\.\d{3}/.test(match[1]),match[0]);}
