@@ -1,0 +1,9 @@
+'use strict';
+const assert=require('node:assert/strict');
+const C=require('../js/regression.js');
+const cases=require('./cases.json');
+const close=(a,b)=>a===b||(typeof a==='number'&&typeof b==='number'&&Math.abs(a-b)<=1e-12+1e-10*Math.abs(b));
+const results=cases.map(c=>{let f=C.fit(c.points,!!c.origin),unknowns=c.unknowns.map(y=>C.unknown(f,y));assert.equal(f.ok,c.expected.ok,c.name);if(f.ok){for(let k of ['a','b','r2'])assert(close(f[k],c.expected[k]),c.name+' '+k+': '+f[k]+' / '+c.expected[k]);}unknowns.forEach((u,i)=>assert(close(u.x,c.expected.x_unknowns[i]),c.name+' 未知濃度'));assert.deepEqual(C.fit(c.points,!!c.origin),f,'未知試料が回帰に混入していない');return {name:c.name,a:f.a,b:f.b,r2:f.r2,x_unknowns:unknowns.map(u=>u.x),errors:f.errors};});
+let parsed=C.parseTable('濃度\t吸光度\r\n０，０５\t０，０３５５\r\n−0.1\t−0.2');assert.deepEqual(parsed.rows.map(r=>[r.x,r.y]),[[.05,.0355],[-.1,-.2]]);assert(parsed.headers);assert.equal(C.parseTable('x;y\n0,05;0,06').rows[0].x,.05);assert.equal(C.parseTable('x,y,z\n1,2,3').rows[0].y,2);assert.equal(C.parseTable('1 2\n3 4').rows.length,2);assert.equal(C.equation({ok:true,a:.5572,b:.00471}), 'y = 0.5572x + 0.004710');assert.equal(C.equation({ok:true,a:.5572,b:-.00471}), 'y = 0.5572x − 0.004710');assert.equal(C.tick(.30000000000000004,.1),'0.3');assert.equal(C.tick(0,.02),'0');assert.equal(C.format(null),'—');assert.equal(C.fit([{x:'',y:1},{x:0,y:1},{x:1,y:2}]).warnings.length,2);assert(C.unknown(C.fit([{x:0,y:1},{x:1,y:2}]),9).extrapolated);
+assert.equal(C.format(.99996,4),'1.000');assert.equal(C.format(9.9996,4),'10.00');assert.equal(C.normalize(' メーカー '),'メーカー');assert.equal(C.number('ー１.２'),-1.2);assert.equal(C.parseTable('メーカー\t吸光度\n1\t2').headers[0],'メーカー');assert(C.unknown(C.fit([{x:.01,y:.02},{x:.4,y:.8}]),1).status.includes('0.01–0.4'));
+process.stdout.write(JSON.stringify(results,null,2)+'\n');
